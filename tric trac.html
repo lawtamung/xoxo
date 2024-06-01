@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+    }
+
+    .board {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 100px);
+        gap: 5px;
+        background-color: #fff;
+        border: 5px solid #333;
+        border-radius: 10px;
+    }
+
+    .cell {
+        width: 100px;
+        height: 100px;
+        border: 1px solid #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 36px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .cell:hover {
+        background-color: #eee;
+    }
+
+    .message {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .button:hover {
+        background-color: #45a049;
+    }
+</style>
+</head>
+<body>
+<div class="board" id="board"></div>
+<div class="message" id="message"></div>
+<button class="button" onclick="restartGame()">Restart Game</button>
+<script>
+    const board = document.getElementById('board');
+    const message = document.getElementById('message');
+    let currentPlayer = 'X';
+    let cells = ['', '', '', '', '', '', '', '', ''];
+    let gameEnded = false;
+
+    function checkWinner() {
+        const winConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        for (let condition of winConditions) {
+            const [a, b, c] = condition;
+            if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                return cells[a];
+            }
+        }
+
+        if (!cells.includes('')) {
+            return 'draw';
+        }
+
+        return null;
+    }
+
+    function botMove() {
+        // Check if bot can win in the next move
+        for (let i = 0; i < 9; i++) {
+            if (!cells[i]) {
+                cells[i] = currentPlayer;
+                if (checkWinner() === currentPlayer) {
+                    cells[i] = '';
+                    return i;
+                }
+                cells[i] = '';
+            }
+        }
+
+        // Check if opponent can win in the next move
+        const opponent = currentPlayer === 'X' ? 'O' : 'X';
+        for (let i = 0; i < 9; i++) {
+            if (!cells[i]) {
+                cells[i] = opponent;
+                if (checkWinner() === opponent) {
+                    cells[i] = '';
+                    return i;
+                }
+                cells[i] = '';
+            }
+        }
+
+        // Choose the center cell if available
+        if (!cells[4]) {
+            return 4;
+        }
+
+        // Choose a random available corner cell
+        const corners = [0, 2, 6, 8];
+        const availableCorners = corners.filter(index => !cells[index]);
+        if (availableCorners.length > 0) {
+            return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+        }
+
+        // Choose a random available edge cell
+        const edges = [1, 3, 5, 7];
+        const availableEdges = edges.filter(index => !cells[index]);
+        return availableEdges[Math.floor(Math.random() * availableEdges.length)];
+    }
+
+    function handleClick(index) {
+        if (!gameEnded && !cells[index]) {
+            cells[index] = currentPlayer;
+            render();
+            const winner = checkWinner();
+            if (winner) {
+                gameEnded = true;
+                if (winner === 'draw') {
+                    message.textContent = 'ไอ้กระจอกเอาชนะแค่aiแค่นี้ก็ไม่ได้!';
+                } else {
+                    message.textContent = `ไอ้${winner} อย่าแอค!`;
+                }
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                if (currentPlayer === 'O') {
+                    setTimeout(() => {
+                        const index = botMove();
+                        cells[index] = currentPlayer;
+                        render();
+                        const winner = checkWinner();
+                        if (winner) {
+                            gameEnded = true;
+                            if (winner === 'draw') {
+                                message.textContent = 'ไอ้กระจอกเอาชนะแค่aiแค่นี้ก็ไม่ได้!';
+                            } else {
+                                message.textContent = `ไอ้${winner} อย่าแอค!`;
+                            }
+                        }
+                        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                    }, 1000); // Delay bot move for 1 second
+                }
+            }
+        }
+    }
+
+    function render() {
+        board.innerHTML = '';
+        cells.forEach((cell, index) => {
+            const cellElement = document.createElement('div');
+            cellElement.classList.add('cell');
+            cellElement.textContent = cell;
+            cellElement.addEventListener('click', () => handleClick(index));
+            board.appendChild(cellElement);
+        });
+    }
+
+    function restartGame() {
+        currentPlayer = 'X';
+        cells = ['', '', '', '', '', '', '', '', ''];
+        gameEnded = false;
+        message.textContent = '';
+        render();
+    }
+
+    render();
+</script>
+</body>
+</html>
